@@ -14,5 +14,6 @@ object Commands : ECommandManager(
     Trash,
     Players,
     Show,
-    Redstone
+    Redstone,
+    UnloadStats
 )

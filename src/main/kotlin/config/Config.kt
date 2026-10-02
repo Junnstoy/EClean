@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender
 import top.e404.eclean.PL
 import top.e404.eclean.clean.Trashcan
 import top.e404.eclean.monitor.RedstoneMonitor
+import top.e404.eclean.maintenance.ChunkUnloader
 import top.e404.eplugin.config.JarConfigDefault
 import top.e404.eplugin.config.KtxConfig
 import top.e404.eplugin.config.serialization.RegexSerialization
@@ -25,11 +26,13 @@ object Config : KtxConfig<ConfigData>(
         if (Bukkit.isPrimaryThread()) {
             Trashcan.schedule()
             RedstoneMonitor.restart()
+            ChunkUnloader.restart()
             return
         }
         plugin.runTask {
             Trashcan.schedule()
             RedstoneMonitor.restart()
+            ChunkUnloader.restart()
         }
     }
 }
@@ -47,6 +50,7 @@ data class ConfigData(
     @SerialName("no_online")
     var noOnline: NoOnlineConfig = NoOnlineConfig(),
     var redstone: RedstoneConfig = RedstoneConfig(),
+    @SerialName("chunk_unload") var chunkUnload: ChunkUnloadConfig = ChunkUnloadConfig(),
 )
 
 @Serializable

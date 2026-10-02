@@ -13,6 +13,7 @@ import top.e404.eclean.hook.PapiHook
 import top.e404.eclean.listener.DespawnListener
 import top.e404.eclean.menu.MenuManager
 import top.e404.eclean.monitor.RedstoneMonitor
+import top.e404.eclean.maintenance.ChunkUnloader
 import top.e404.eclean.papi.Papi
 import top.e404.eclean.update.Update
 import top.e404.eplugin.EPlugin
@@ -66,6 +67,7 @@ open class EClean : EPlugin {
         MenuManager.register()
         DespawnListener.register()
         RedstoneMonitor.register()
+        ChunkUnloader.register()
         Trashcan.register()
         if (PapiHook.enable) Papi.register()
         for (line in logo) info(line)
@@ -74,6 +76,7 @@ open class EClean : EPlugin {
 
     override fun onDisable() {
         RedstoneMonitor.stop()
+        ChunkUnloader.stop()
         MenuManager.shutdown()
         if (PapiHook.enable) Papi.unregister()
         Bukkit.getScheduler().cancelTasks(this)

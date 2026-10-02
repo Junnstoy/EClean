@@ -199,3 +199,14 @@ redstone:
   max_tracked_blocks: 10000
   # 完整世界名，不支持正则
   ignored_worlds: []
+
+# 闲置区块卸载请求：不删除地图，不移除任何插件票据。默认关闭。
+chunk_unload:
+  enable: false
+  period_ticks: 100
+  idle_ticks: 1200
+  # 玩家附近至少保护此区块半径；不会小于服务端视距
+  keep_radius: 10
+  scan_budget: 64
+  request_budget: 4
+  ignored_worlds: []
