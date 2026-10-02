@@ -65,6 +65,7 @@ fun resetConfig() {
         chunk = ChunkConfig(enable = false)
         trashcan = TrashcanConfig()
         noOnline = NoOnlineConfig()
+        redstone = RedstoneConfig()
     }
     // 清空控制台输出
     consoleOut

@@ -8,6 +8,7 @@ import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import top.e404.eclean.PL
 import top.e404.eclean.clean.Trashcan
+import top.e404.eclean.monitor.RedstoneMonitor
 import top.e404.eplugin.config.JarConfigDefault
 import top.e404.eplugin.config.KtxConfig
 import top.e404.eplugin.config.serialization.RegexSerialization
@@ -23,9 +24,13 @@ object Config : KtxConfig<ConfigData>(
     override fun onLoad(config: ConfigData, sender: CommandSender?) {
         if (Bukkit.isPrimaryThread()) {
             Trashcan.schedule()
+            RedstoneMonitor.restart()
             return
         }
-        plugin.runTask { Trashcan.schedule() }
+        plugin.runTask {
+            Trashcan.schedule()
+            RedstoneMonitor.restart()
+        }
     }
 }
 
@@ -41,6 +46,7 @@ data class ConfigData(
     var trashcan: TrashcanConfig,
     @SerialName("no_online")
     var noOnline: NoOnlineConfig = NoOnlineConfig(),
+    var redstone: RedstoneConfig = RedstoneConfig(),
 )
 
 @Serializable

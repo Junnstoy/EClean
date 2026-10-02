@@ -16,6 +16,7 @@ import top.e404.eclean.test.clean.ChunkCleanTest
 import top.e404.eclean.test.clean.DropCleanTest
 import top.e404.eclean.test.clean.LivingCleanTest
 import top.e404.eclean.test.clean.WorldRulesTest
+import top.e404.eclean.test.monitor.RedstoneIntegrationTest
 import top.e404.eclean.unit
 import trash.TrashcanTest
 
@@ -76,6 +77,9 @@ class ECleanTest {
     @Nested
     @DisplayName("世界规则与实体优先级")
     inner class TestWorldRules : WorldRulesTest()
+
+    @Nested
+    inner class TestRedstone : RedstoneIntegrationTest()
 
     @Nested
     @DisplayName("垃圾桶单元测试")

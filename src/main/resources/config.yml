@@ -185,3 +185,17 @@ no_online:
   message: true
   # 设置为false则没有在线玩家时不清理(但是会显示清理倒计时)
   clean: true
+
+
+# 红石事件活动监测；事件次数不等同于耗时。默认关闭。
+redstone:
+  enable: false
+  # report: 仅统计/后台报警；suppress: 冷却期间抑制已识别方块的电流上升
+  mode: report
+  window_ticks: 100
+  max_changes: 100
+  consecutive_windows: 3
+  cooldown_ticks: 200
+  max_tracked_blocks: 10000
+  # 完整世界名，不支持正则
+  ignored_worlds: []

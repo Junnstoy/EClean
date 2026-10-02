@@ -13,5 +13,6 @@ object Commands : ECommandManager(
     EntityStats,
     Trash,
     Players,
-    Show
+    Show,
+    Redstone
 )
