@@ -54,17 +54,18 @@ val consoleOut
 val enableDebug = System.getProperty("eclean.debug") != null
 fun resetConfig() {
     world.entities.forEach(Entity::remove)
-    Config.config = ConfigData(
-        debug = enableDebug,
-        update = false,
-        duration = Long.MAX_VALUE,
-        message = mutableMapOf(),
-        living = LivingConfig(enable = false),
-        drop = DropConfig(enable = false),
-        chunk = ChunkConfig(enable = false),
-        trashcan = TrashcanConfig(),
+    // EPlugin 1.4.0 exposes an internal setter; reset the public mutable fields.
+    Config.config.apply {
+        debug = enableDebug
+        update = false
+        duration = Long.MAX_VALUE
+        message = mutableMapOf()
+        living = LivingConfig(enable = false)
+        drop = DropConfig(enable = false)
+        chunk = ChunkConfig(enable = false)
+        trashcan = TrashcanConfig()
         noOnline = NoOnlineConfig()
-    )
+    }
     // 清空控制台输出
     consoleOut
 }

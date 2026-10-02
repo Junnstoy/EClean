@@ -1,13 +1,19 @@
 package top.e404.eclean.command
 
 import org.bukkit.Bukkit
+import org.bukkit.Chunk
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.EntityType
 import top.e404.eclean.PL
 import top.e404.eclean.clean.info
 import top.e404.eclean.config.Lang
 import top.e404.eplugin.EPlugin.Companion.formatAsConst
-import top.e404.eplugin.util.mcVer
+
+// Minecraft 26.x no longer uses the 1.x version format understood by EPlugin.
+// Detect the API capability instead, retaining support for pre-1.13 servers.
+private val supportsForceLoadedChunks = Chunk::class.java.methods.any {
+    it.name == "isForceLoaded" && it.parameterCount == 0
+}
 
 fun CommandSender.sendWorldStats(worldName: String) {
     val world = Bukkit.getWorld(worldName)
@@ -37,7 +43,7 @@ fun CommandSender.sendWorldStats(worldName: String) {
             "command.stats.world",
             "world" to worldName,
             "count" to world.loadedChunks.size,
-            "force" to if (mcVer!!.major < 13) null else world.loadedChunks.count { it.isForceLoaded },
+            "force" to if (supportsForceLoadedChunks) world.loadedChunks.count { it.isForceLoaded } else null,
             "entity" to entity
         ]
     )

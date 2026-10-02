@@ -46,9 +46,9 @@ class TrashcanZone(
             // 左键 拿一个
             ClickType.LEFT, ClickType.DOUBLE_CLICK -> 1
             // shift + 左键 拿一组
-            ClickType.SHIFT_LEFT -> info.item.maxStackSize
+            ClickType.SHIFT_LEFT -> info.origin.maxStackSize
             // 右键 拿一半
-            ClickType.RIGHT -> max(min(info.item.maxStackSize / 2, info.amount / 2), 1)
+            ClickType.RIGHT -> max(min(info.origin.maxStackSize / 2, info.amount / 2), 1)
             // 其他点击方式 不拿
             else -> {
                 player.playSound(player.location, Sound.ENTITY_BLAZE_DEATH, 1F, 1F)
@@ -59,7 +59,8 @@ class TrashcanZone(
         // 要拿取的物品数量
         var waitForTake = planTake
         PL.debug { "玩家${player.name}计划从公共垃圾桶中拿取${info.origin.type}x${planTake}, 预计剩余${info.amount - planTake}" }
-        val maxStackSize = info.origin.type.maxStackSize
+        // Item components can override the material's default stack size.
+        val maxStackSize = info.origin.maxStackSize
         // 遍历背包
         for (i in (0 until 36)) {
             if (waitForTake == 0) break

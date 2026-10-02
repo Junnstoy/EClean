@@ -142,6 +142,24 @@ abstract class TrashcanTest {
     @DisplayName("从垃圾桶中拿取物品")
     inner class TestTakeItemFromTrashcan {
         @Test
+        @DisplayName("按物品自身堆叠上限合并，溢出放入下一格")
+        fun takeWithCustomStackLimit() {
+            // Model a component override while keeping the legacy API test suite.
+            val item = object : ItemStack(Material.STONE, 32) {
+                override fun getMaxStackSize() = 16
+            }
+            Trashcan.addItem(item)
+            player.inventory.setItem(0, item.clone().apply { amount = 8 })
+
+            val (_, event) = shiftLeftClick(0)
+
+            kotlin.test.assertTrue(event.isCancelled)
+            kotlin.test.assertEquals(16, player.inventory.getItem(0)?.amount)
+            kotlin.test.assertEquals(8, player.inventory.getItem(1)?.amount)
+            kotlin.test.assertEquals(16, Trashcan.trashValues.single().amount)
+        }
+
+        @Test
         @DisplayName("拿取1个")
         fun takeOne() {
             Trashcan.addItem(ItemStack(Material.STONE, 2))
