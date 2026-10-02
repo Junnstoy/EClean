@@ -6,6 +6,7 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import top.e404.eclean.PL
 import top.e404.eclean.config.Config
+import top.e404.eclean.config.forWorld
 import top.e404.eclean.util.info
 import top.e404.eclean.util.isMatch
 import top.e404.eclean.util.noOnline
@@ -64,6 +65,7 @@ fun cleanLiving() {
  * @return Pair(clean, all)
  */
 fun World.cleanLiving(): Pair<Int, Int> {
+    val livingCfg = Config.config.living.forWorld(name)
     val all = livingEntities.filterNot { it is Player }.toMutableList()
     val total = all.size
 
@@ -75,40 +77,20 @@ fun World.cleanLiving(): Pair<Int, Int> {
         append("]")
     }
 
-    // livingCfg.settings.name == false 时不清理命名的生物(从列表中移除)
-    if (!livingCfg.settings.name) all.removeIf { it.customName != null }
-    // livingCfg.settings.lead == false 时不清理拴绳拴住的生物(从列表中移除)
-    if (!livingCfg.settings.lead) all.removeIf { it.isLeashed }
-    // livingCfg.settings.mount == false 时不清理乘骑中的生物(从列表中移除)
-    if (!livingCfg.settings.mount) all.removeIf { it.isInsideVehicle || it.passengers.isNotEmpty() }
-
     val groupBy = mutableMapOf<String, MutableList<LivingEntity>>()
-    for (entity in all) groupBy.getOrPut(entity.type.name) { mutableListOf() }.add(entity)
-
-    // 黑名单 名字匹配的清理 名字不匹配的从列表中移除(不清理)
-    if (livingCfg.black) groupBy.entries.removeIf { (type, list) ->
-        // 首个匹配的正则
-        val matchesRegex = type.isMatch(livingCfg.match)
-        // 没有匹配的 -> noMatch = true -> remove -> 从列表中移除 -> 不清理
-        val noMatch = matchesRegex == null
-        PL.buildDebug {
-            if (noMatch) append("不")
-            append("清理").append(type).append("x").append(list.size)
-            if (matchesRegex != null) append(", 命中规则: ").append(matchesRegex.pattern)
-        }
-        noMatch
-    }
-    // 白名单 名字匹配的从列表中移除(不清理) 名字不匹配的清理
-    else groupBy.entries.removeIf { (type, list) ->
-        val matchesRegex = type.isMatch(livingCfg.match)
-        // 有匹配的 -> matches = true -> remove -> 从列表中移除 -> 不清理
-        val matches = matchesRegex != null
-        PL.buildDebug {
-            if (matches) append("不")
-            append("清理").append(type).append("x").append(list.size)
-            if (matchesRegex != null) append(", 命中规则: ").append(matchesRegex.pattern)
-        }
-        matches
+    for ((type, candidates) in all.groupBy { it.type.name }) {
+        val rule = livingCfg.entities[type]
+        val matches = type.isMatch(livingCfg.match) != null
+        val clean = rule?.clean ?: (matches == livingCfg.black)
+        if (!clean) continue
+        val settings = rule?.settings?.resolve(livingCfg.settings) ?: livingCfg.settings
+        val eligible = candidates.filter { entity ->
+            (settings.name || entity.customName == null) &&
+                (settings.lead || !entity.isLeashed) &&
+                (settings.mount || (!entity.isInsideVehicle && entity.passengers.isEmpty()))
+        }.toMutableList()
+        PL.debug { "世界${name}清理${type}x${eligible.size}, 实体规则=${rule != null}" }
+        groupBy[type] = eligible
     }
 
     var count = 0

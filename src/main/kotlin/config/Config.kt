@@ -56,6 +56,8 @@ data class DropConfig(
     @SerialName("written_book")
     var writtenBook: Boolean = false,
     var match: MutableList<@Serializable(RegexSerialization::class) Regex> = mutableListOf(),
+    var worlds: Map<String, DropOverride> = emptyMap(),
+    var materials: Map<String, DropItemRule> = emptyMap(),
 )
 
 @Serializable
@@ -68,6 +70,8 @@ data class LivingConfig(
     @SerialName("is_black")
     var black: Boolean = true,
     var match: MutableList<@Serializable(RegexSerialization::class) Regex> = mutableListOf(),
+    var worlds: Map<String, LivingOverride> = emptyMap(),
+    var entities: Map<String, LivingEntityRule> = emptyMap(),
 )
 
 @Serializable
@@ -87,7 +91,14 @@ data class ChunkConfig(
     var count: Int = 50,
     var format: String? = null,
     var limit: MutableMap<@Serializable(RegexSerialization::class) Regex, Int> = mutableMapOf(),
-)
+    var worlds: Map<String, ChunkOverride> = emptyMap(),
+    var entities: Map<String, ChunkEntityRule> = emptyMap(),
+) {
+    init {
+        require(count >= 0) { "chunk.count must be non-negative" }
+        require(limit.values.all { it >= 0 }) { "chunk.limit must be non-negative" }
+    }
+}
 
 @Serializable
 data class TrashcanConfig(

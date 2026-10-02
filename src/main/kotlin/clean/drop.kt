@@ -7,6 +7,7 @@ import org.bukkit.entity.Item
 import org.bukkit.inventory.meta.BookMeta
 import top.e404.eclean.PL
 import top.e404.eclean.config.Config
+import top.e404.eclean.config.forWorld
 import top.e404.eclean.util.isMatch
 import top.e404.eclean.util.noOnline
 import top.e404.eclean.util.noOnlineMessage
@@ -65,6 +66,7 @@ fun cleanDrop() {
  * @return Pair(clean, all)
  */
 fun World.cleanDrop(): Pair<Int, Int> {
+    val dropCfg = Config.config.drop.forWorld(name)
     PL.debug { "" }
     PL.debug { "开始清理世界${name}中的掉落物" }
     // 所有物品
@@ -79,47 +81,23 @@ fun World.cleanDrop(): Pair<Int, Int> {
         append("]")
     }
 
-    // dropCfg.enchant == true 时不清理附魔物品(从列表中移除)
-    if (dropCfg.enchant) waitingForClean.removeIf { it.itemStack.itemMeta?.hasEnchants() == true }
-    // dropCfg.writtenBook == true 时不清理写过的书(从列表中移除)
-    if (dropCfg.writtenBook) waitingForClean.removeIf {
-        it.itemStack.type == Material.WRITABLE_BOOK
-                && (it.itemStack.itemMeta as? BookMeta)?.hasPages() == true
+    // Preserve the existing "all" count: protected items are excluded before matching.
+    waitingForClean.removeIf { item ->
+        val stack = item.itemStack
+        val rule = dropCfg.materials[stack.type.name]
+        ((rule?.enchant ?: dropCfg.enchant) && stack.itemMeta?.hasEnchants() == true) ||
+            ((rule?.writtenBook ?: dropCfg.writtenBook) && stack.type == Material.WRITABLE_BOOK
+                && (stack.itemMeta as? BookMeta)?.hasPages() == true) ||
+            ((rule?.lore ?: dropCfg.lore) && stack.itemMeta?.hasLore() == true)
     }
-    // dropCfg.lore == true 时不清理lore的物品(从列表中移除)
-    if (dropCfg.lore) waitingForClean.removeIf {
-        it.itemStack.itemMeta?.hasLore() == true
-    }
-
-    val items = mutableMapOf<String, MutableList<Item>>()
-    waitingForClean.forEach {
-        items.getOrPut(it.itemStack.type.name) { mutableListOf() }.add(it)
-    }
-
-    // 黑名单 名字匹配的清理 名字不匹配的从列表中移除(不清理)
-    if (dropCfg.black) items.entries.removeIf { (type, list) ->
-        // 首个匹配的正则
-        val matchesRegex = type.isMatch(dropCfg.match)
-        // 没有匹配的 -> noMatch = true -> remove -> 从列表中移除 -> 不清理
-        val noMatch = matchesRegex == null
-        PL.buildDebug {
-            if (noMatch) append("不")
-            append("清理").append(type).append("x").append(list.size)
-            if (matchesRegex != null) append(", 命中规则: ").append(matchesRegex.pattern)
+    val items = mutableMapOf<String, List<Item>>()
+    for ((type, candidates) in waitingForClean.groupBy { it.itemStack.type.name }) {
+        val rule = dropCfg.materials[type]
+        val matches = type.isMatch(dropCfg.match) != null
+        if (rule?.clean ?: (matches == dropCfg.black)) {
+            PL.debug { "世界${name}清理${type}x${candidates.size}, 物品规则=${rule != null}" }
+            items[type] = candidates
         }
-        noMatch
-    }
-    // 白名单 名字匹配的从列表中移除(不清理) 名字不匹配的清理
-    else items.entries.removeIf { (type, list) ->
-        val matchesRegex = type.isMatch(dropCfg.match)
-        // 有匹配的 -> matches = true -> remove -> 从列表中移除 -> 不清理
-        val matches = matchesRegex != null
-        PL.buildDebug {
-            if (matches) append("不")
-            append("清理").append(type).append("x").append(list.size)
-            if (matchesRegex != null) append(", 命中规则: ").append(matchesRegex.pattern)
-        }
-        matches
     }
 
     var count = 0

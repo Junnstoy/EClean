@@ -5,8 +5,11 @@ import org.bukkit.Chunk
 import org.bukkit.World
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.Player
 import top.e404.eclean.PL
 import top.e404.eclean.config.Config
+import top.e404.eclean.config.ChunkConfig
+import top.e404.eclean.config.forWorld
 import top.e404.eclean.util.info
 import top.e404.eclean.util.noOnline
 import top.e404.eclean.util.noOnlineMessage
@@ -63,9 +66,12 @@ fun cleanDenseEntities() {
  *
  * @return 清理的实体数量
  */
-fun World.cleanChunkDenseEntities() = loadedChunks.sumOf { it.cleanDenseEntities() }
+fun World.cleanChunkDenseEntities(): Int {
+    val resolved = Config.config.chunk.forWorld(name)
+    return loadedChunks.sumOf { it.cleanDenseEntities(resolved) }
+}
 
-private fun Chunk.cleanDenseEntities(): Int {
+private fun Chunk.cleanDenseEntities(chunkCfg: ChunkConfig): Int {
     // 最终要移除的实体
     val willBeRemoved = entities.toMutableList()
     if (willBeRemoved.isEmpty()) return 0
@@ -77,15 +83,24 @@ private fun Chunk.cleanDenseEntities(): Int {
         willBeRemoved.info().entries.joinTo(this, ", ") { (k, v) -> "$k: $v" }
         append("]")
     }
-    val settings = chunkCfg.settings
-    // chunkCfg.settings.name == true 时清理被命名的生物, false -> 从列表中移除(不清理)
-    if (!settings.name) willBeRemoved.removeIf { it.customName != null }
-    // chunkCfg.settings.lead == true 时清理拴绳拴住的生物, false -> 从列表中移除(不清理)
-    if (!settings.lead) willBeRemoved.removeIf { it is LivingEntity && it.isLeashed }
-    // chunkCfg.settings.mount == true 时清理乘骑中的生物, false 从列表中移除(不清理)
-    if (!settings.mount) willBeRemoved.removeIf { it.isInsideVehicle || it.passengers.isNotEmpty() }
+    // Players are never cleanup candidates, including explicit PLAYER rules.
+    willBeRemoved.removeIf { entity ->
+        val rule = chunkCfg.entities[entity.type.name]
+        val settings = rule?.settings?.resolve(chunkCfg.settings) ?: chunkCfg.settings
+        entity is Player || rule?.clean == false ||
+            (!settings.name && entity.customName != null) ||
+            (!settings.lead && entity is LivingEntity && entity.isLeashed) ||
+            (!settings.mount && (entity.isInsideVehicle || entity.passengers.isNotEmpty()))
+    }
 
     var count = 0
+    // Exact entity limits take precedence and never participate in a lower-priority group.
+    for ((type, rule) in chunkCfg.entities) {
+        val limit = rule.limit ?: continue
+        val matches = willBeRemoved.filter { it.type.name == type }
+        willBeRemoved.removeAll(matches.toSet())
+        matches.drop(limit).forEach { it.remove(); count++ }
+    }
 
     // 规则匹配
     chunkCfg.limit.entries.mapNotNull { (regex, limit) ->

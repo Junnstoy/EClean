@@ -15,6 +15,7 @@ import top.e404.eclean.command.sendWorldStats
 import top.e404.eclean.test.clean.ChunkCleanTest
 import top.e404.eclean.test.clean.DropCleanTest
 import top.e404.eclean.test.clean.LivingCleanTest
+import top.e404.eclean.test.clean.WorldRulesTest
 import top.e404.eclean.unit
 import trash.TrashcanTest
 
@@ -71,6 +72,10 @@ class ECleanTest {
     @Nested
     @DisplayName("生物清理单元测试")
     inner class TestLivingClean : LivingCleanTest()
+
+    @Nested
+    @DisplayName("世界规则与实体优先级")
+    inner class TestWorldRules : WorldRulesTest()
 
     @Nested
     @DisplayName("垃圾桶单元测试")
