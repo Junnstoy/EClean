@@ -21,12 +21,13 @@ class IdleChunkPolicyTest {
 
     @Test
     fun everyProtectionAndUnknownTicketStatePreventsUnloading() {
-        assertTrue(safeToUnload(false, 0, false, false))
-        assertFalse(safeToUnload(true, 0, false, false))
-        assertFalse(safeToUnload(false, 1, false, false))
-        assertFalse(safeToUnload(false, null, false, false))
-        assertFalse(safeToUnload(false, 0, true, false))
-        assertFalse(safeToUnload(false, 0, false, true))
+        assertTrue(safeToUnload(false, 0, 0, false))
+        assertFalse(safeToUnload(true, 0, 0, false))
+        assertFalse(safeToUnload(false, 1, 0, false))
+        assertFalse(safeToUnload(false, null, 0, false))
+        assertFalse(safeToUnload(false, 0, 1, false))
+        assertFalse(safeToUnload(false, 0, 0, true))
+        assertFalse(safeToUnload(false, 0, null, false))
     }
 
     @Test
