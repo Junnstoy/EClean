@@ -9,7 +9,7 @@
 | EPlugin 年份版本号解析修复 | 保留。兼容传统 `1.x.y` 和 `26.x`，无需撤销。该修改位于 EPlugin 独立分支，EClean 不依赖它。 |
 | EClean 的 EPlugin 依赖 | 保持 `top.e404:eplugin-*:1.4.0`，没有升级到 EPlugin 主分支的新坐标 `top.e404.eplugin:*:1.4.0-SNAPSHOT`，无需整体回退框架。 |
 | YAML 解析依赖 | Kaml 0.60 带入 Java 11 的 SnakeYAML KMP 类，旧包有 260 个 major 55 类；EClean 固定为 Kaml 0.55.0，隔离 SnakeYAML Engine 包。EClean 向 KtxConfig 显式传入 Yaml，避开框架默认格式的新版构造器。这只验证 EClean 使用的框架路径，不代表 EPlugin 全部模块均支持 Java 8。 |
-| EPlugin 本地构建调整 | 从 v1.4.0 标签构建四个实际依赖模块，仅属于构建准备，没有提交到 EPlugin 主分支。 |
+| EPlugin 本地构建调整 | 从原作者 v1.4.0 标签（`5e575fc`）源码构建四个实际依赖模块，框架源码未改；构建配置做过准备性调整。没有使用 main 或独立的版本解析修复分支。详见 [构建说明](build-notes.md)。 |
 | 26.x 统计及物品堆叠修复 | 保留。`ItemStack.maxStackSize` 在 1.8 可用，现代版本可返回自定义上限。新接口改为反射检查与调用。 |
 | 三个新功能 | 保留，增加独立、持久化开关。红石和区块卸载默认关闭；世界覆盖规则默认开启，无覆盖项时原行为不变。 |
 
