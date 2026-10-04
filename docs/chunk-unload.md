@@ -1,6 +1,6 @@
 # 闲置区块卸载请求（默认关闭）
 
-在 `config.yml` 设置 `chunk_unload.enable: true` 后，用 `/eclean unloadstats` 查看计数，需要 `eclean.admin` 权限。
+使用 `/eclean chunkunload on|off|status` 修改或查询开关，或在 `config.yml` 设置 `chunk_unload.enable: true` 后，用 `/eclean unloadstats` 查看计数，需要 `eclean.admin` 权限。
 
 本模块只尝试将已加载且符合条件的区块加入服务器的安全卸载队列。不删除区块文件、不移除实体、不关闭自动保存，不移除其他插件的加载票据，也不取消强制加载。
 
@@ -8,9 +8,10 @@
 
 - 排除 `ignored_worlds` 中的完整世界名。
 - 已加载，且检查时没有强制加载标记、插件加载票据或正在观察该区块的玩家。
-- 不在任何玩家附近的保护半径内；半径为 `keep_radius` 和服务端视距的较大值，单位为区块。另通过 `Chunk.getPlayersSeeingChunk` 检查实际观察玩家，避免只依赖视距设置。不能使用已弃用的 `World.isChunkInUse`：实测 Paper 26.3 build 143 中该方法直接返回 `isChunkLoaded`，会错误跳过所有已加载候选。
+- 不在玩家保护半径内，半径为 `keep_radius` 和服务端视距的较大值。
+- 观察玩家接口存在时直接检查；旧版无票据接口时使用旧 `isChunkInUse`；有票据接口却无观察玩家接口时仅处理无玩家世界。见 [兼容说明](compatibility.md)。
 - 首次满足条件后，至少经过 `idle_ticks` 游戏 tick 的观测时间。后续观察到受保护状态或区块重新加载事件会重置计时；这不是对两次检查之间所有活动的完整追踪。
-- 插件票据或区块观察玩家 API 不存在时不启动该功能；检查出现异常或返回未知状态时跳过该区块。
+- 安全检查 API 都不可用时不启动；检查异常或未知状态时跳过区块。旧版不存在的票据功能不适用。
 
 ## 预算和统计
 

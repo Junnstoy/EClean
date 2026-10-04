@@ -67,7 +67,7 @@ drop:
 
 世界规则支持 `is_black`、`match`、`enchant`、`lore`、`written_book`；物品规则支持 `clean` 以及后三个保护字段。保护字段的 `true` 表示保护，与生物 `settings` 中 `true` 表示允许清理的原有含义不同。
 
-该功能只改变主动清理，不改变 `trashcan.despawn` 的自然消失物品回收规则。`written_book` 继续使用原有实现：保护含页面的 `WRITABLE_BOOK`。
+该功能只改变主动清理，不改变 `trashcan.despawn` 的自然消失物品回收规则。`written_book` 继续使用原有实现：保护含页面的 `WRITABLE_BOOK`（1.8～1.12 对应 `BOOK_AND_QUILL`）。
 
 ## 密集实体清理
 
@@ -100,6 +100,8 @@ chunk:
 - 玩家始终排除，包含显式 `PLAYER` 和匹配所有实体的正则。
 
 ## 重载与验证
+
+`world_rules` 是世界和实体/材料覆盖项的总开关。`/eclean worldrules on|off|status` 立即修改并保存，需要 `eclean.admin`。关闭只跳过覆盖项，保留原始配置，清理仍按原默认规则执行。
 
 使用已有 `/eclean reload` 重载配置。规则按每次清理解析，不保留跨重载缓存。可先在测试世界执行 `/eclean clean entity <世界>`、`/eclean clean drop <世界>`、`/eclean clean chunk <世界>` 检查效果。
 

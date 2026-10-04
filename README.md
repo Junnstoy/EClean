@@ -38,6 +38,13 @@
 - `/eclean stats <世界名>` 统计实体和区块统计
 - `/eclean trash` 打开垃圾桶
 - `/eclean show` 打开密集实体统计信息菜单
+- `/eclean worldrules <on|off|status>` 世界和实体（物品）规则开关
+- `/eclean redstone <on|off|status>` 红石统计/抑制开关
+- `/eclean redstone stats [世界名]` 红石统计
+- `/eclean chunkunload <on|off|status>` 闲置区块卸载开关
+- `/eclean unloadstats` 卸载请求统计
+
+三个开关均需 `eclean.admin`，立即生效并保存配置，重启保留。首次保存备份为 `config.yml.before-feature-switch`；保存会移除 YAML 注释。世界规则默认开启，红石和区块卸载默认关闭。见 [兼容说明](docs/compatibility.md) 与 [典型版本测试](docs/compatibility-test-report.md)。
 
 ## 权限
 

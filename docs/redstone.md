@@ -1,5 +1,7 @@
 # 红石活动统计及可选高频抑制
 
+`/eclean redstone on|off|status` 修改或查询开关，立即保存并生效。`/eclean redstone stats [世界名]` 查看统计；权限 `eclean.admin`。
+
 配置见 `config.yml` 的 `redstone` 段。默认 `enable: false`，启用后使用 `/eclean redstone [世界名]` 查看最多 10 个活动点，需要 `eclean.admin` 权限。
 
 - 统计的是 `BlockRedstoneEvent` 中新旧电流不同的事件。每个方块独立计数；不是电路周期数，也不是 CPU 耗时。某些方块更新并不触发该事件。
