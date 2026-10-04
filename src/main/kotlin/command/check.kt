@@ -1,7 +1,7 @@
 package top.e404.eclean.command
 
 import org.bukkit.Bukkit
-import org.bukkit.Chunk
+import top.e404.eclean.util.Compatibility
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.EntityType
 import top.e404.eclean.PL
@@ -11,9 +11,7 @@ import top.e404.eplugin.EPlugin.Companion.formatAsConst
 
 // Minecraft 26.x no longer uses the 1.x version format understood by EPlugin.
 // Detect the API capability instead, retaining support for pre-1.13 servers.
-private val supportsForceLoadedChunks = Chunk::class.java.methods.any {
-    it.name == "isForceLoaded" && it.parameterCount == 0
-}
+
 
 fun CommandSender.sendWorldStats(worldName: String) {
     val world = Bukkit.getWorld(worldName)
@@ -43,7 +41,7 @@ fun CommandSender.sendWorldStats(worldName: String) {
             "command.stats.world",
             "world" to worldName,
             "count" to world.loadedChunks.size,
-            "force" to if (supportsForceLoadedChunks) world.loadedChunks.count { it.isForceLoaded } else null,
+            "force" to if (Compatibility.supportsForceLoadedChunks) world.loadedChunks.count { Compatibility.isForceLoaded(it) } else null,
             "entity" to entity
         ]
     )

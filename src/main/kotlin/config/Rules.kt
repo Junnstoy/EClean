@@ -73,12 +73,14 @@ data class ChunkEntityRule(
 }
 
 fun LivingConfig.forWorld(world: String): LivingConfig {
+    if (!Config.config.worldRules) return copy(worlds = emptyMap(), entities = emptyMap())
     val rule = worlds[world] ?: return this
     return copy(settings = rule.settings.resolve(settings), black = rule.black ?: black,
         match = rule.match?.toMutableList() ?: match)
 }
 
 fun DropConfig.forWorld(world: String): DropConfig {
+    if (!Config.config.worldRules) return copy(worlds = emptyMap(), materials = emptyMap())
     val rule = worlds[world] ?: return this
     return copy(black = rule.black ?: black, match = rule.match?.toMutableList() ?: match,
         enchant = rule.enchant ?: enchant, lore = rule.lore ?: lore,
@@ -86,6 +88,7 @@ fun DropConfig.forWorld(world: String): DropConfig {
 }
 
 fun ChunkConfig.forWorld(world: String): ChunkConfig {
+    if (!Config.config.worldRules) return copy(worlds = emptyMap(), entities = emptyMap())
     val rule = worlds[world] ?: return this
     return copy(settings = rule.settings.resolve(settings), count = rule.count ?: count,
         format = rule.format ?: format, limit = rule.limit?.toMutableMap() ?: limit)

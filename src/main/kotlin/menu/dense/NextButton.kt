@@ -1,7 +1,7 @@
 package top.e404.eclean.menu.dense
 
 import org.bukkit.Material
-import org.bukkit.Sound
+import top.e404.eclean.util.Compatibility
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import top.e404.eclean.config.Lang
@@ -22,7 +22,7 @@ class NextButton(val viewMenu: DenseMenu) : MenuButton(viewMenu) {
     ): Boolean {
         if (zone.hasNext) {
             val player = event.whoClicked as Player
-            player.playSound(player.location, Sound.BLOCK_STONE_BUTTON_CLICK_ON, 1F, 1F)
+            Compatibility.playSound(player, "BLOCK_STONE_BUTTON_CLICK_ON", "CLICK")
             zone.nextPage()
             menu.updateIcon()
         }

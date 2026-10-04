@@ -1,7 +1,7 @@
 package top.e404.eclean.menu.trashcan
 
 import org.bukkit.Material
-import org.bukkit.Sound
+import top.e404.eclean.util.Compatibility
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -51,7 +51,7 @@ class TrashcanZone(
             ClickType.RIGHT -> max(min(info.origin.maxStackSize / 2, info.amount / 2), 1)
             // 其他点击方式 不拿
             else -> {
-                player.playSound(player.location, Sound.ENTITY_BLAZE_DEATH, 1F, 1F)
+                Compatibility.playSound(player, "ENTITY_BLAZE_DEATH", "BLAZE_DEATH")
                 return true
             }
         }.let { min(it, info.amount) }
@@ -121,7 +121,7 @@ class TrashcanZone(
 
             // 其他点击方式 不放
             else -> {
-                player.playSound(player.location, Sound.ENTITY_BLAZE_DEATH, 1F, 1F)
+                Compatibility.playSound(player, "ENTITY_BLAZE_DEATH", "BLAZE_DEATH")
                 return
             }
         }

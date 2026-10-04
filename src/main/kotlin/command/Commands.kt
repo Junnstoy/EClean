@@ -15,5 +15,7 @@ object Commands : ECommandManager(
     Players,
     Show,
     Redstone,
+    WorldRules,
+    ChunkUnload,
     UnloadStats
 )

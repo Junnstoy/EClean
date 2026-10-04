@@ -1,6 +1,7 @@
 package top.e404.eclean.clean
 
 import org.bukkit.Bukkit
+import top.e404.eclean.util.Compatibility
 import org.bukkit.Chunk
 import org.bukkit.World
 import org.bukkit.entity.Entity
@@ -73,7 +74,8 @@ fun World.cleanChunkDenseEntities(): Int {
 
 private fun Chunk.cleanDenseEntities(chunkCfg: ChunkConfig): Int {
     // 最终要移除的实体
-    val willBeRemoved = entities.toMutableList()
+    // 1.8 retains removed entities in chunk slices until the next tick.
+    val willBeRemoved = entities.filter { it.isValid }.toMutableList()
     if (willBeRemoved.isEmpty()) return 0
     PL.debug { "" }
     val chunkInfo = info()
@@ -90,7 +92,7 @@ private fun Chunk.cleanDenseEntities(chunkCfg: ChunkConfig): Int {
         entity is Player || rule?.clean == false ||
             (!settings.name && entity.customName != null) ||
             (!settings.lead && entity is LivingEntity && entity.isLeashed) ||
-            (!settings.mount && (entity.isInsideVehicle || entity.passengers.isNotEmpty()))
+            (!settings.mount && (entity.isInsideVehicle || Compatibility.hasPassengers(entity)))
     }
 
     var count = 0

@@ -17,13 +17,14 @@ object Reload : ECommand(
     override val usage get() = Lang["command.usage.reload"]
 
     override fun onCommand(sender: CommandSender, args: Array<out String>) {
-        plugin.runTaskAsync {
+        try {
             Lang.load(sender)
             Config.load(sender)
-            plugin.runTask {
-                Clean.schedule()
-                plugin.sendMsgWithPrefix(sender, Lang["command.reload_done"])
-            }
+            Clean.schedule()
+            plugin.sendMsgWithPrefix(sender, Lang["command.reload_done"])
+        } catch (ex: Exception) {
+            plugin.warn("重新加载配置失败", ex)
+            sender.sendMessage("重新加载失败，原有清理配置仍生效，请查看控制台")
         }
     }
 }

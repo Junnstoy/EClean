@@ -1,6 +1,7 @@
 package top.e404.eclean.clean
 
 import org.bukkit.Bukkit
+import top.e404.eclean.util.Compatibility
 import org.bukkit.World
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
@@ -87,7 +88,7 @@ fun World.cleanLiving(): Pair<Int, Int> {
         val eligible = candidates.filter { entity ->
             (settings.name || entity.customName == null) &&
                 (settings.lead || !entity.isLeashed) &&
-                (settings.mount || (!entity.isInsideVehicle && entity.passengers.isEmpty()))
+                (settings.mount || (!entity.isInsideVehicle && !Compatibility.hasPassengers(entity)))
         }.toMutableList()
         PL.debug { "世界${name}清理${type}x${eligible.size}, 实体规则=${rule != null}" }
         groupBy[type] = eligible

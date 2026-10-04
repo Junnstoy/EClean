@@ -41,6 +41,7 @@ object Config : KtxConfig<ConfigData>(
 data class ConfigData(
     var debug: Boolean = false,
     var update: Boolean = true,
+    @SerialName("world_rules") var worldRules: Boolean = true,
     var duration: Long,
     var message: MutableMap<Long, String>,
     var living: LivingConfig,

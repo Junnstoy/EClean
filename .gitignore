@@ -3,3 +3,6 @@
 build
 gradle/wrapper
 !gradle/wrapper/gradle-wrapper.properties
+.kotlin
+.integration-work
+integration/__pycache__

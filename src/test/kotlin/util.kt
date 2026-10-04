@@ -58,6 +58,7 @@ fun resetConfig() {
     Config.config.apply {
         debug = enableDebug
         update = false
+        worldRules = true
         duration = Long.MAX_VALUE
         message = mutableMapOf()
         living = LivingConfig(enable = false)

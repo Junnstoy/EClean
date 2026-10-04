@@ -1,7 +1,7 @@
 package top.e404.eclean.menu.dense
 
 import org.bukkit.Material
-import org.bukkit.Sound
+import top.e404.eclean.util.Compatibility
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
@@ -50,7 +50,7 @@ class DenseMenu(data: MutableList<EntityInfo>) : ChestMenu(PL, 6, Lang["menu.den
                     override fun onClick(slot: Int, event: InventoryClickEvent): Boolean {
                         temp = !temp
                         val player = event.whoClicked as Player
-                        player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 1F)
+                        Compatibility.playSound(player, "ENTITY_EXPERIENCE_ORB_PICKUP", "ORB_PICKUP")
                         menu.updateIcon()
                         return true
                     }

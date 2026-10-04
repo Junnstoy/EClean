@@ -1,5 +1,7 @@
 # 若设置为true则会在后台输出检查的详细信息
 debug: false
+# 世界和实体(物品)覆盖规则总开关：/eclean worldrules on|off|status
+world_rules: true
 
 # 检查更新
 update: true

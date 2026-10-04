@@ -1,7 +1,7 @@
 package top.e404.eclean.maintenance
 
 import org.bukkit.Bukkit
-import org.bukkit.Chunk
+import top.e404.eclean.util.Compatibility
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.world.ChunkLoadEvent
@@ -17,9 +17,7 @@ internal fun safeToUnload(forced: Boolean, pluginTickets: Int?, playerViewers: I
 
 internal class BukkitChunkAccess(private val config: ChunkUnloadConfig) : ChunkAccess {
     companion object {
-        private val tickets = runCatching { Chunk::class.java.getMethod("getPluginChunkTickets") }.getOrNull()
-        private val viewers = runCatching { Chunk::class.java.getMethod("getPlayersSeeingChunk") }.getOrNull()
-        val supported get() = tickets != null && viewers != null
+        val supported get() = Compatibility.supportsChunkUnload
     }
 
     override fun snapshot() = Bukkit.getWorlds().filterNot { it.name in config.ignoredWorlds }.flatMap { world ->
@@ -31,17 +29,17 @@ internal class BukkitChunkAccess(private val config: ChunkUnloadConfig) : ChunkA
         if (world.name in config.ignoredWorlds || !world.isChunkLoaded(address.x, address.z)) return false
         // Main-thread check then lookup: never intentionally load an unloaded candidate.
         val chunk = world.getChunkAt(address.x, address.z)
-        val pluginTickets = (tickets?.invoke(chunk) as? Collection<*>)?.size
+        val pluginTickets = Compatibility.pluginTickets(chunk)
         // Paper 26.3's deprecated World.isChunkInUse simply returns isChunkLoaded.
         // Checking it here would reject every loaded candidate, even with no players.
-        val playerViewers = (viewers?.invoke(chunk) as? Collection<*>)?.size
+        val playerViewers = Compatibility.playerViewers(chunk)
         val radius = maxOf(config.keepRadius, Bukkit.getViewDistance())
         val nearby = world.players.any {
             val loc = it.location
             abs((loc.blockX shr 4).toLong() - address.x) <= radius &&
                 abs((loc.blockZ shr 4).toLong() - address.z) <= radius
         }
-        safeToUnload(chunk.isForceLoaded, pluginTickets, playerViewers, nearby)
+        safeToUnload(Compatibility.isForceLoaded(chunk), pluginTickets, playerViewers, nearby)
     }.getOrDefault(false) // Unknown API state must never become permission to unload.
 
     override fun request(address: ChunkAddress): Boolean {
@@ -67,7 +65,7 @@ object ChunkUnloader : EListener(PL) {
         val config = Config.config.chunkUnload
         if (!config.enable) return
         if (!BukkitChunkAccess.supported) {
-            PL.warn("区块卸载未启动：当前 API 无法检查插件加载票据或区块观察玩家")
+            PL.warn("区块卸载未启动：当前 API 缺少安全区块检查能力")
             return
         }
         val state = IdleChunkPolicy(config, BukkitChunkAccess(config))

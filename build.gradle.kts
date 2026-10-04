@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.zip.ZipFile
+import java.io.DataInputStream
 
 plugins {
     kotlin("jvm") version "2.1.21"
@@ -28,12 +30,14 @@ repositories {
 
 dependencies {
     // spigot
-    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     // eplugin
     implementation(eplugin("core"))
     implementation(eplugin("menu"))
     implementation(eplugin("serialization"))
     implementation(eplugin("hook-placeholderapi"))
+    // Kaml 0.60 pulls in Java 11-only SnakeYAML KMP classes.
+    implementation("com.charleskorn.kaml:kaml:0.55.0") { version { strictly("0.55.0") } }
     // placeholderAPI
     compileOnly("me.clip:placeholderapi:2.11.6")
     // Bstats
@@ -72,9 +76,20 @@ tasks {
         relocate("kotlin", "top.e404.eclean.relocate.kotlin")
         relocate("top.e404.eplugin", "top.e404.eclean.relocate.eplugin")
         relocate("com.charleskorn.kaml", "top.e404.eclean.relocate.kaml")
+        relocate("org.snakeyaml.engine", "top.e404.eclean.relocate.snakeyaml.engine")
         exclude("META-INF/**")
 
         doLast {
+            ZipFile(archiveFile.get().asFile).use { jar ->
+                jar.entries().asSequence().filter { it.name.endsWith(".class") }.forEach { entry ->
+                    DataInputStream(jar.getInputStream(entry)).use { input ->
+                        check(input.readInt() == 0xCAFEBABE.toInt())
+                        input.readUnsignedShort()
+                        val major = input.readUnsignedShort()
+                        check(major <= 52) { "Java 8 incompatible class: ${entry.name} (major=$major)" }
+                    }
+                }
+            }
             val archiveFile = archiveFile.get().asFile
             println(archiveFile.parentFile.absolutePath)
             println(archiveFile.absolutePath)

@@ -1,7 +1,7 @@
 package top.e404.eclean.clean
 
 import org.bukkit.Bukkit
-import org.bukkit.Material
+import top.e404.eclean.util.Compatibility
 import org.bukkit.World
 import org.bukkit.entity.Item
 import org.bukkit.inventory.meta.BookMeta
@@ -86,7 +86,7 @@ fun World.cleanDrop(): Pair<Int, Int> {
         val stack = item.itemStack
         val rule = dropCfg.materials[stack.type.name]
         ((rule?.enchant ?: dropCfg.enchant) && stack.itemMeta?.hasEnchants() == true) ||
-            ((rule?.writtenBook ?: dropCfg.writtenBook) && stack.type == Material.WRITABLE_BOOK
+            ((rule?.writtenBook ?: dropCfg.writtenBook) && Compatibility.isWritableBook(stack)
                 && (stack.itemMeta as? BookMeta)?.hasPages() == true) ||
             ((rule?.lore ?: dropCfg.lore) && stack.itemMeta?.hasLore() == true)
     }
