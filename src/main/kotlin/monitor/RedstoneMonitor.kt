@@ -12,6 +12,8 @@ object RedstoneMonitor : EListener(PL) {
     private var task: BukkitTask? = null
     internal var window: RedstoneWindow? = null
         private set
+    internal var suppressedEvents = 0L
+        private set
 
     fun restart() {
         stop()
@@ -32,6 +34,7 @@ object RedstoneMonitor : EListener(PL) {
         task?.cancel()
         task = null
         window = null
+        suppressedEvents = 0L
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -43,6 +46,9 @@ object RedstoneMonitor : EListener(PL) {
         val suppress = state.record(RedstonePosition(block.world.name, block.x, block.y, block.z))
         // Allow falling edges so the mitigation does not deliberately latch a powered block on.
         // This API does not cancel all physics or guarantee that an entire circuit will stop.
-        if (suppress && event.newCurrent > event.oldCurrent) event.newCurrent = event.oldCurrent
+        if (suppress && event.newCurrent > event.oldCurrent) {
+            event.newCurrent = event.oldCurrent
+            suppressedEvents++
+        }
     }
 }

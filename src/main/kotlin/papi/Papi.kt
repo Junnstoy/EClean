@@ -31,7 +31,7 @@ object Papi : PapiExpansion(PL, "eclean") {
             "last_chunk" -> lastChunk.toString()
             "trashcan_countdown" -> Trashcan.countdown.toString()
             "trashcan_countdown_formatted" -> Trashcan.countdown.parseSecondAsDuration()
-            else -> null
+            else -> FeaturePlaceholders.resolve(params.lowercase())
         }
     }
 
@@ -43,7 +43,7 @@ object Papi : PapiExpansion(PL, "eclean") {
         "%eclean_last_chunk%",
         "%eclean_trashcan_countdown%",
         "%eclean_trashcan_countdown_formatted%",
-    )
+    ).apply { addAll(FeaturePlaceholders.keys.map { "%eclean_${it}%" }) }
 
     override fun getPlaceholders() = placeholders
 }

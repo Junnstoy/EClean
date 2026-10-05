@@ -6,7 +6,7 @@ import top.e404.eclean.PL
 import top.e404.eclean.monitor.RedstoneMonitor
 import top.e404.eplugin.command.ECommand
 
-object Redstone : ECommand(PL, "redstone", "(?i)redstone", false, "eclean.admin") {
+object Redstone : ECommand(PL, "redstone", "(?i)redstone", false, "eclean.redstone") {
     override val usage = "/eclean redstone [on|off|status|stats [世界名]]"
 
     override fun onCommand(sender: CommandSender, args: Array<out String>) {

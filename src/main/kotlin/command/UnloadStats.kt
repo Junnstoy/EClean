@@ -5,7 +5,7 @@ import top.e404.eclean.PL
 import top.e404.eclean.maintenance.ChunkUnloader
 import top.e404.eplugin.command.ECommand
 
-object UnloadStats : ECommand(PL, "unloadstats", "(?i)unloadstats", false, "eclean.admin") {
+object UnloadStats : ECommand(PL, "unloadstats", "(?i)unloadstats", false, "eclean.chunkunload") {
     override val usage = "/eclean unloadstats"
     override fun onCommand(sender: CommandSender, args: Array<out String>) {
         if (args.size != 1) { sender.sendMessage(usage); return }

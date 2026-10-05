@@ -45,6 +45,7 @@ dependencies {
 
     // mock bukkit
     testImplementation(kotlin("test", "2.1.21"))
+    testImplementation("me.clip:placeholderapi:2.11.6")
     testImplementation("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.87.0")
     testImplementation("org.slf4j:slf4j-simple:2.0.13")

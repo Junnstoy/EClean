@@ -15,6 +15,7 @@ internal interface ChunkAccess {
 /** Bounded inspection/request work; snapshots enumerate only chunks already loaded. */
 internal class IdleChunkPolicy(private val config: ChunkUnloadConfig, private val access: ChunkAccess) {
     private val pending = ArrayDeque<ChunkAddress>()
+    val pendingCount get() = pending.size
     private val since = mutableMapOf<ChunkAddress, Long>()
     private var tick = 0L
     var scanned = 0L

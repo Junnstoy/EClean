@@ -15,6 +15,7 @@ import top.e404.eclean.menu.MenuManager
 import top.e404.eclean.monitor.RedstoneMonitor
 import top.e404.eclean.maintenance.ChunkUnloader
 import top.e404.eclean.papi.Papi
+import top.e404.eclean.papi.FeaturePlaceholders
 import top.e404.eclean.update.Update
 import top.e404.eplugin.EPlugin
 import java.io.File
@@ -69,12 +70,13 @@ open class EClean : EPlugin {
         RedstoneMonitor.register()
         ChunkUnloader.register()
         Trashcan.register()
-        if (PapiHook.enable) Papi.register()
+        if (PapiHook.enable && Papi.register()) FeaturePlaceholders.start()
         for (line in logo) info(line)
         info("&a加载完成, 作者404E, 感谢使用".color)
     }
 
     override fun onDisable() {
+        FeaturePlaceholders.stop()
         RedstoneMonitor.stop()
         ChunkUnloader.stop()
         MenuManager.shutdown()

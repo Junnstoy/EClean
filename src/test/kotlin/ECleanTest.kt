@@ -18,6 +18,8 @@ import top.e404.eclean.test.clean.LivingCleanTest
 import top.e404.eclean.test.clean.WorldRulesTest
 import top.e404.eclean.test.monitor.RedstoneIntegrationTest
 import top.e404.eclean.test.command.FeatureCommandsTest
+import top.e404.eclean.test.command.FeaturePermissionsTest
+import top.e404.eclean.test.papi.FeaturePlaceholdersTest
 import top.e404.eclean.unit
 import trash.TrashcanTest
 
@@ -84,6 +86,12 @@ class ECleanTest {
 
     @Nested
     inner class TestFeatureCommands : FeatureCommandsTest()
+
+    @Nested
+    inner class TestFeaturePermissions : FeaturePermissionsTest()
+
+    @Nested
+    inner class TestFeaturePlaceholders : FeaturePlaceholdersTest()
 
     @Nested
     @DisplayName("垃圾桶单元测试")

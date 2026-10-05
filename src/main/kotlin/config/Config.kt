@@ -10,6 +10,7 @@ import top.e404.eclean.PL
 import top.e404.eclean.clean.Trashcan
 import top.e404.eclean.monitor.RedstoneMonitor
 import top.e404.eclean.maintenance.ChunkUnloader
+import top.e404.eclean.papi.FeaturePlaceholders
 import top.e404.eplugin.config.JarConfigDefault
 import top.e404.eplugin.config.KtxConfig
 import top.e404.eplugin.config.serialization.RegexSerialization
@@ -27,12 +28,14 @@ object Config : KtxConfig<ConfigData>(
             Trashcan.schedule()
             RedstoneMonitor.restart()
             ChunkUnloader.restart()
+            FeaturePlaceholders.refresh()
             return
         }
         plugin.runTask {
             Trashcan.schedule()
             RedstoneMonitor.restart()
             ChunkUnloader.restart()
+            FeaturePlaceholders.refresh()
         }
     }
 }

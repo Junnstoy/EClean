@@ -6,6 +6,7 @@ import top.e404.eclean.config.Config
 import top.e404.eclean.config.ConfigData
 import top.e404.eclean.maintenance.ChunkUnloader
 import top.e404.eclean.monitor.RedstoneMonitor
+import top.e404.eclean.papi.FeaturePlaceholders
 import top.e404.eclean.util.Compatibility
 import top.e404.eplugin.command.ECommand
 import java.nio.file.AtomicMoveNotSupportedException
@@ -14,6 +15,7 @@ import java.nio.file.StandardCopyOption
 
 enum class Feature(val command: String, val label: String) {
     WORLD_RULES("worldrules", "世界及实体规则"), REDSTONE("redstone", "红石统计及高频抑制"), CHUNK_UNLOAD("chunkunload", "闲置区块卸载");
+    val permission get() = "eclean.$command"
     fun enabled(config: ConfigData) = when (this) {
         WORLD_RULES -> config.worldRules
         REDSTONE -> config.redstone.enable
@@ -46,6 +48,7 @@ internal fun setFeature(feature: Feature, enabled: Boolean) {
         Feature.REDSTONE -> RedstoneMonitor.restart()
         Feature.CHUNK_UNLOAD -> ChunkUnloader.restart()
     }
+    FeaturePlaceholders.refresh()
 }
 
 internal fun featureCommand(sender: CommandSender, args: Array<out String>, feature: Feature): Boolean {
@@ -73,7 +76,7 @@ internal fun featureCommand(sender: CommandSender, args: Array<out String>, feat
     return true
 }
 
-open class FeatureSwitch(private val feature: Feature) : ECommand(PL, feature.command, "(?i)${feature.command}", false, "eclean.admin") {
+open class FeatureSwitch(private val feature: Feature) : ECommand(PL, feature.command, "(?i)${feature.command}", false, feature.permission) {
     override val usage = "/eclean ${feature.command} <on|off|status>"
     override fun onCommand(sender: CommandSender, args: Array<out String>) {
         if (!featureCommand(sender, args, feature)) sender.sendMessage(usage)

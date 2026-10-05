@@ -14,6 +14,19 @@ permissions:
   eclean.admin:
     default: op
     description: 允许使用插件管理指令
+    children:
+      eclean.worldrules: true
+      eclean.redstone: true
+      eclean.chunkunload: true
+  eclean.worldrules:
+    default: false
+    description: 允许切换和查询世界及实体清理规则
+  eclean.redstone:
+    default: false
+    description: 允许切换红石监控并查看状态和统计
+  eclean.chunkunload:
+    default: false
+    description: 允许切换闲置区块卸载并查看状态和统计
   eclean.trash:
     default: op
     description: 允许打开垃圾桶

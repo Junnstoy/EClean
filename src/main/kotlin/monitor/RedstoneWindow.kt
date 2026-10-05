@@ -12,9 +12,13 @@ internal class RedstoneWindow(val config: RedstoneConfig) {
         private set
     var untracked = 0L
         private set
+    var events = 0L
+        private set
     private val entries = mutableMapOf<RedstonePosition, Activity>()
+    val trackedBlocks get() = entries.size
 
     fun record(position: RedstonePosition): Boolean {
+        events++
         val entry = entries[position] ?: run {
             if (entries.size >= config.maxTrackedBlocks) { untracked++; return false }
             Activity().also { entries[position] = it }
