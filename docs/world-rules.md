@@ -101,8 +101,10 @@ chunk:
 
 ## 重载与验证
 
-`world_rules` 是世界和实体/材料覆盖项的总开关。`/eclean worldrules on|off|status` 立即修改并保存，需要 `eclean.admin`。关闭只跳过覆盖项，保留原始配置，清理仍按原默认规则执行。
+`world_rules` 是世界和实体/材料覆盖项的总开关。`/eclean worldrules on|off|status` 立即修改并保存，需要 `eclean.worldrules`（`eclean.admin` 自动继承）。关闭只跳过覆盖项，保留原始配置，清理仍按原默认规则执行。
 
 使用已有 `/eclean reload` 重载配置。规则按每次清理解析，不保留跨重载缓存。可先在测试世界执行 `/eclean clean entity <世界>`、`/eclean clean drop <世界>`、`/eclean clean chunk <世界>` 检查效果。
 
 已有 26.x 兼容修复继续保留。本功能不包含红石统计、自动拆除、区块卸载或 Folia 调度适配。
+
+对应占位符及授权说明见 [权限与占位符](permissions-placeholders.md)。

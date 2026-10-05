@@ -32,7 +32,7 @@ EClean 编译基线设为 Spigot API 1.8.8，打包任务检查所有依赖类�
 | `/eclean redstone on\|off\|status` | `redstone.enable` | 停止统计，释放活动和抑制状态 |
 | `/eclean chunkunload on\|off\|status` | `chunk_unload.enable` | 停止扫描，清空候选与闲置计时 |
 
-均需 `eclean.admin`，修改立即生效并保存 `config.yml`，重启保留。首次命令保存前备份为 `config.yml.before-feature-switch`；序列化会重新排版并移除 YAML 注释。`status` 区分配置与实际运行状态。关闭不撤销已交给服务端的卸载请求，也不自动重启已停止的红石时钟。
+依次需要 `eclean.worldrules`、`eclean.redstone`、`eclean.chunkunload`，`eclean.admin` 继承三项权限，修改立即生效并保存 `config.yml`，重启保留。首次命令保存前备份为 `config.yml.before-feature-switch`；序列化会重新排版并移除 YAML 注释。`status` 区分配置与实际运行状态。关闭不撤销已交给服务端的卸载请求，也不自动重启已停止的红石时钟。
 
 统计命令为 `/eclean redstone stats [世界名]` 和 `/eclean unloadstats`。旧写法 `/eclean redstone [世界名]` 保留；世界名若与开关词相同，使用 `stats <世界名>`。
 
@@ -43,3 +43,5 @@ EClean 编译基线设为 Spigot API 1.8.8，打包任务检查所有依赖类�
 3. 有插件票据但没有观察玩家 API：只处理**无玩家的世界**。这些版本的 `isChunkInUse` 可能只是 `isChunkLoaded`，不能当作玩家检查。
 
 路径按 API 能力选择，`status` 显示实际方式。检查异常或状态未知则跳过。只使用服务端安全卸载请求，不删除区块文件、不移除插件票据、不取消强加载，也不使用不保存的强制卸载。
+
+新增 17 个只读状态/统计占位符，完整列表见 [权限与占位符](permissions-placeholders.md)。

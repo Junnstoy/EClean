@@ -1,8 +1,8 @@
 # 红石活动统计及可选高频抑制
 
-`/eclean redstone on|off|status` 修改或查询开关，立即保存并生效。`/eclean redstone stats [世界名]` 查看统计；权限 `eclean.admin`。
+`/eclean redstone on|off|status` 修改或查询开关，立即保存并生效。`/eclean redstone stats [世界名]` 查看统计；权限 `eclean.redstone`（`eclean.admin` 自动继承）。
 
-配置见 `config.yml` 的 `redstone` 段。默认 `enable: false`，启用后使用 `/eclean redstone [世界名]` 查看最多 10 个活动点，需要 `eclean.admin` 权限。
+配置见 `config.yml` 的 `redstone` 段。默认 `enable: false`，启用后使用 `/eclean redstone [世界名]` 查看最多 10 个活动点，需要 `eclean.redstone`（`eclean.admin` 自动继承）权限。
 
 - 统计的是 `BlockRedstoneEvent` 中新旧电流不同的事件。每个方块独立计数；不是电路周期数，也不是 CPU 耗时。某些方块更新并不触发该事件。
 - 使用游戏 tick 窗口；服务器低 TPS 时，100 tick 会超过现实时间的 5 秒。
@@ -16,3 +16,5 @@
 - 重载配置会取消旧任务并清空统计、冷却。停止插件也会释放状态。
 
 该实现面向普通 Bukkit/Paper 调度，不宣称 Folia 支持。自动破坏红石元件不包含在内。
+
+对应占位符及授权说明见 [权限与占位符](permissions-placeholders.md)。

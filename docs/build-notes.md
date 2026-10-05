@@ -1,6 +1,6 @@
 # 构建来源与测试产物
 
-本说明对应 2026-10-04 的十版本测试。实现提交为 `1cb6777bd400f961044a5807b18cd2590633fc7e`，完整探针和测试记录提交为 `47ad12754ab831d656318f046ecef5e950fccb17`；后续 PR 材料整理只更新文档。
+本说明对应 2026-10-05 新增权限和 17 个占位符后的重新构建与验证。生产代码提交为 `6e9913d8c42225e963debc6af60c2e7987711b42`；当前分支另包含修正后的实服探针、完整权限文档和本轮测试元数据。
 
 ## EPlugin 的来源
 
@@ -23,7 +23,7 @@
 
 ## EClean 构建
 
-使用 Gradle 8.10 / JDK 17，编译 API 为 Spigot 1.8.8，Kotlin/Java 输出目标为 Java 8。构建环境使用 Maven 本地仓库、Maven Central、Spigot snapshots、PlaceholderAPI 和 Paper Maven 仓库；依赖解析的 JVM 属性设为 17，以解析测试所需依赖，最终产物仍单独检查 Java 8 字节码。
+使用 Gradle 8.10 / Temurin JDK 17.0.16+8，编译 API 为 Spigot 1.8.8，Kotlin/Java 输出目标为 Java 8。构建环境使用 Maven 本地仓库、Maven Central、Spigot snapshots、PlaceholderAPI 和 Paper Maven 仓库；依赖解析的 JVM 属性设为 17，以解析测试所需依赖，最终产物仍单独检查 Java 8 字节码。
 
 在上述四个 EPlugin 模块已可从本地 Maven 解析、仓库及 JVM 解析属性配置完成后，在 EClean 根目录执行：
 
@@ -33,18 +33,20 @@ gradle test shadowJar
 
 EClean 严格固定 Kaml 0.55.0，并隔离 SnakeYAML Engine 包。配置构造时显式传入兼容的 `Yaml`，避免调用 EPlugin 默认格式的新版构造器。此验证仅针对 EClean 实际使用的框架路径。
 
-打包任务检查全部 `.class`，发现 major > 52 即失败。本轮 JAR 含 1925 个 major 52 类、32 个 major 49 类，没有更高字节码；同一 JAR 又在真实 Java 8 服务端完成验证。EPlugin 运行依赖已经内嵌，无需额外安装 EPlugin 插件。
+打包任务检查全部 `.class`，发现 major > 52 即失败。本轮 JAR 含 1926 个 major 52 类、32 个 major 49 类，没有更高字节码；同一 JAR 又在真实 Java 8 服务端完成验证。EPlugin 运行依赖已经内嵌，无需额外安装 EPlugin 插件。
 
 ## 测试与复现边界
 
 测试流程见 [integration/README.md](https://github.com/Junnstoy/EClean/blob/fix/compat-1.8-26-features/integration/README.md)。探针会修改和清理测试世界并主动停止服务端，仅用于独立、可丢弃的测试服务器。
 
-脚本选择所列 Minecraft 版本在执行时下载接口返回的构建，并下载相应 Java 大版本的当前 Temurin JDK，因此日后执行不保证仍取得本轮完全相同的版本。对照本轮结果应使用 [test-manifest.json](https://github.com/Junnstoy/EClean/blob/fix/compat-1.8-26-features/integration/test-manifest.json) 中的 Paper build、SHA-256 和 Java 版本；测试包另保留各版本的 `selected.json`。重新构建产生不同哈希时，应记录为新的测试产物，不能沿用本轮哈希声称已验证。
+脚本选择所列 Minecraft 版本在执行时下载接口返回的构建，并默认下载相应 Java 大版本的当前 Temurin JDK；可用 `ECLEAN_JAVA_<major>_HOME` 指定本地 JDK，本轮 Java 17 使用 17.0.16+8。因此日后执行不保证仍取得本轮完全相同的版本。对照本轮结果应使用 [test-manifest.json](https://github.com/Junnstoy/EClean/blob/fix/compat-1.8-26-features/integration/test-manifest.json) 中的 Paper build、SHA-256 和 Java 版本；测试包另保留各版本的 `selected.json`。重新构建产生不同哈希时，应记录为新的测试产物，不能沿用本轮哈希声称已验证。
 
-本轮结果为 60 项单元测试和 405 项最终有效实服断言；早期失败及重测已在 [测试报告](compatibility-test-report.md) 单列。整理 PR 材料时重新核对了归档中的全部校验值、JUnit XML、最终 TSV 和分支中的 manifest，没有重新运行服务端测试。
+本轮结果为 68 项单元测试（无失败、错误或跳过）和 685 项最终有效实服断言，其中 PAPI 十版本 595 项、无 PAPI 两个端点 90 项。生产 JAR、单元测试和服务器测试均重新运行；初轮探针失败及修正另见 [测试报告](compatibility-test-report.md)。
 
 ## 产物身份
 
 - 文件：`EClean-1.21.0.jar`；插件描述保留项目原版本号，不是上游新发布版本。
-- SHA-256：`9dce75a770d03919147a328883473e4a5194400498673fd8f6e7c593c28fe7b3`。
+- SHA-256：`b16063a1e163024d85f74eaee4dd36f5efedc67b95ad368b866f16ec38486eb7`。
 - 测试包包含构建日志、JUnit XML、实服首轮/重启日志、逐项 TSV、构建元数据和校验值；不分发 Minecraft 服务端或 JDK。
+
+PlaceholderAPI 作为可选运行插件测试：Java 8 的四个代表版本使用 2.11.6，其余使用 2.12.3。版本及 SHA 记录于 manifest；另以 1.8.8 和 26.3 验证完全未安装 PAPI 的情况。PAPI 测试依赖不打入 EClean JAR。

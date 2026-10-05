@@ -1,0 +1,28 @@
+[
+  {
+    "minecraft": "1.8.8",
+    "paper_build": 445,
+    "java": "1.8.0_504",
+    "assertions": 44,
+    "eclean_sha256": "b16063a1e163024d85f74eaee4dd36f5efedc67b95ad368b866f16ec38486eb7",
+    "protection": "legacy isChunkInUse + player radius",
+    "run_directory": "test-results/no-papi/1.8.8",
+    "source_run": "20261005-004030",
+    "paper_sha256": "7ff6d2cec671ef0d95b3723b5c92890118fb882d73b7f8fa0a2cd31d97c55f86",
+    "placeholderapi": null,
+    "placeholderapi_sha256": null
+  },
+  {
+    "minecraft": "26.3",
+    "paper_build": 151,
+    "java": "25.0.4.1",
+    "assertions": 46,
+    "eclean_sha256": "b16063a1e163024d85f74eaee4dd36f5efedc67b95ad368b866f16ec38486eb7",
+    "protection": "player viewers",
+    "run_directory": "test-results/no-papi/26.3",
+    "source_run": "20261005-004030",
+    "paper_sha256": "daf00db322543de77eb2012f37a1919537fafe13e04888ef256e56a5ca51af69",
+    "placeholderapi": null,
+    "placeholderapi_sha256": null
+  }
+]

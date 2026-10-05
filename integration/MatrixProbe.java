@@ -7,6 +7,10 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.permissions.PermissibleBase;
+import org.bukkit.permissions.ServerOperator;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.scheduler.BukkitTask;
 import top.e404.eclean.config.Config;
 import top.e404.eclean.monitor.RedstoneMonitor;
@@ -15,6 +19,7 @@ import top.e404.eclean.menu.trashcan.TrashcanMenu;
 import top.e404.eclean.menu.dense.DenseMenu;
 import top.e404.eclean.menu.dense.EntityInfo;
 import top.e404.eclean.util.Compatibility;
+import top.e404.eclean.papi.FeaturePlaceholders;
 import java.lang.reflect.*;
 import java.nio.file.*;
 import java.util.*;
@@ -28,7 +33,8 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   World a,b,u; BukkitTask clock;
   String living="living: {enable: false}\n",drop="drop: {enable: false}\n",dense="chunk: {enable: false}\n";
   String red="redstone: {enable: false}\n",unload="chunk_unload: {enable: false}\n";
-  boolean restarting;
+  boolean restarting,guardCandidate;
+  final boolean testPapi=Boolean.getBoolean("eclean.probe.papi");
   final Path checkpoint=Paths.get("phase1.complete");
   void write(Path p,String s){try{Files.write(p,s.getBytes("UTF-8"));}catch(Exception e){throw new RuntimeException(e);}}
   void check(String name,boolean pass,Object detail){
@@ -40,6 +46,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   },ticks);}
   public void onEnable(){Bukkit.getPluginManager().registerEvents(this,this);restarting=Files.exists(checkpoint);later(20,()->{
     check("plugin_enabled",Bukkit.getPluginManager().isPluginEnabled("EClean"),Bukkit.getVersion()+"; Java "+System.getProperty("java.version"));
+    if(testPapi)placeholderBasics();
     if(restarting)restart();else first();
   });}
   Object optional(Object target,String name,Class<?>[] types,Object...args){
@@ -56,6 +63,10 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   void cmd(String s){if(!Bukkit.dispatchCommand(Bukkit.getConsoleSender(),s))check("dispatch",false,s);}
   Entity spawn(World w,EntityType type,boolean named){
     w.getChunkAt(0,0).load();Entity e=w.spawnEntity(new Location(w,8,72,8),type);
+    // A randomly spawned chicken jockey is protected as a passenger, which is
+    // unrelated to the count-limit fixture. Explicit riding is tested below.
+    Entity generatedMount=e.getVehicle();if(generatedMount!=null){e.leaveVehicle();generatedMount.remove();}
+    if(e instanceof Zombie)((Zombie)e).setBaby(false);
     if(e instanceof LivingEntity)((LivingEntity)e).setRemoveWhenFarAway(false);
     if(named)e.setCustomName("protected");
     if(!e.isValid())throw new IllegalStateException("Probe entity not activated: "+w.getName()+" "+type);
@@ -78,7 +89,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
     Entity az=spawn(a,EntityType.ZOMBIE,false),bz=spawn(b,EntityType.ZOMBIE,false),s=spawn(a,EntityType.SHEEP,false),c=spawn(a,EntityType.COW,false);
     cmd("eclean clean entity it_a");check("world_entity_default_priority",az.isValid()&&bz.isValid()&&s.isValid()&&!c.isValid(),"A zombie="+az.isValid()+", B zombie="+bz.isValid()+", sheep="+s.isValid()+", cow="+c.isValid());
     cmd("eclean clean entity");check("other_world_default",!bz.isValid()&&az.isValid(),"B uses default");
-    cmd("eclean worldrules off");cmd("eclean clean entity it_a");check("worldrules_off_restores_default",!Config.INSTANCE.getConfig().getWorldRules()&&!az.isValid()&&s.isValid(),"overrides bypassed");
+    cmd("eclean worldrules off");if(testPapi)check("papi_worldrules_immediate",papi("worldrules_enabled").equals("false"),papi("worldrules_enabled"));cmd("eclean clean entity it_a");check("worldrules_off_restores_default",!Config.INSTANCE.getConfig().getWorldRules()&&!az.isValid()&&s.isValid(),"overrides bypassed");
     cmd("eclean worldrules on");cmd("eclean worldrules status");Config.INSTANCE.load(Bukkit.getConsoleSender());check("worldrules_on_persisted",Config.INSTANCE.getConfig().getWorldRules(),"disk reload");clear();
     living=living.replace("match: [SHEEP]","match: [ZOMBIE, SHEEP]").replace("SHEEP: {clean: false}","SHEEP: {clean: true}");config();
     Entity z=spawn(a,EntityType.ZOMBIE,true),sheep=spawn(a,EntityType.SHEEP,true);cmd("eclean clean entity it_a");check("field_priority",z.isValid()&&!sheep.isValid(),"entity name=false beats world true");clear();
@@ -100,6 +111,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   }
   Item item(World w,Material type){ItemStack s=new ItemStack(type);org.bukkit.inventory.meta.ItemMeta m=s.getItemMeta();m.setLore(Arrays.asList("lore"));s.setItemMeta(m);return w.dropItem(new Location(w,9,72,9),s);}
   void commands(){
+    permissionNodes();
     List<String> denied=new ArrayList<>();CommandSender sender=(CommandSender)Proxy.newProxyInstance(getClassLoader(),new Class[]{CommandSender.class},(p,m,args)->{
       if(m.getName().equals("sendMessage")){denied.add(String.valueOf(args[0]));return null;}if(m.getName().equals("getName"))return "no-permission";if(m.getReturnType()==boolean.class)return false;return null;
     });
@@ -109,6 +121,53 @@ public class MatrixProbe extends JavaPlugin implements Listener {
     Config.INSTANCE.load(Bukkit.getConsoleSender());check("redstone_on_persisted",Config.INSTANCE.getConfig().getRedstone().getEnable(),"reload");cmd("eclean redstone off");check("redstone_off_stops_service",RedstoneMonitor.INSTANCE.getWindow$EClean()==null,"immediate");cmd("eclean redstone on");cmd("eclean redstone status");
   }
   String red(String mode,boolean enabled){return "redstone: {enable: "+enabled+", mode: "+mode+", window_ticks: 10, max_changes: 1, consecutive_windows: 2, cooldown_ticks: 40, ignored_worlds: [it_b]}\n";}
+  String papi(String key){
+    try{
+      Class<?> api=Class.forName("me.clip.placeholderapi.PlaceholderAPI",true,Bukkit.getPluginManager().getPlugin("PlaceholderAPI").getClass().getClassLoader());
+      return (String)api.getMethod("setPlaceholders",OfflinePlayer.class,String.class).invoke(null,null,"%eclean_"+key+"%");
+    }catch(Exception e){throw new RuntimeException(e);}
+  }
+  void placeholderBasics(){
+    check("placeholderapi_enabled",Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"),Bukkit.getPluginManager().getPlugin("PlaceholderAPI").getDescription().getVersion());
+    check("papi_registered_and_complete",FeaturePlaceholders.INSTANCE.getKeys().stream().allMatch(k->!papi(k).startsWith("%"))&&!papi("last_drop").startsWith("%"),"17 feature and legacy expansion");
+    check("papi_unknown_unchanged",papi("not_a_key").equals("%eclean_not_a_key%"),"unknown key");
+    try{
+      String expected=papi("redstone_running");
+      String actual=java.util.concurrent.CompletableFuture.supplyAsync(()->{
+        for(int i=0;i<100;i++)papi("chunkunload_scanned");return papi("redstone_running");
+      }).get(5,java.util.concurrent.TimeUnit.SECONDS);
+      check("papi_async_snapshot",expected.equals(actual),actual);
+    }catch(Exception e){throw new RuntimeException(e);}
+  }
+  void permissionNodes(){
+    PermissibleBase base=new PermissibleBase(new ServerOperator(){
+      boolean op;public boolean isOp(){return op;}public void setOp(boolean value){op=value;}
+    });
+    List<String> messages=new ArrayList<>();
+    CommandSender sender=(CommandSender)Proxy.newProxyInstance(getClassLoader(),new Class[]{CommandSender.class},(p,m,args)->{
+      if(m.getName().equals("sendMessage")){messages.add(String.valueOf(args[0]));return null;}
+      if(m.getName().equals("getName"))return "feature-permission-probe";
+      if(m.getName().equals("hasPermission"))return args[0] instanceof Permission?base.hasPermission((Permission)args[0]):base.hasPermission((String)args[0]);
+      if(m.getReturnType()==boolean.class)return false;return null;
+    });
+    List<String> features=Arrays.asList("worldrules","redstone","chunkunload");
+    for(String feature:features){
+      PermissionAttachment attachment=base.addAttachment(this, "eclean."+feature,true);
+      Bukkit.getPluginCommand("eclean").execute(sender,"eclean",new String[]{feature,"on"});
+      boolean enabled=feature.equals("worldrules")?Config.INSTANCE.getConfig().getWorldRules():feature.equals("redstone")?Config.INSTANCE.getConfig().getRedstone().getEnable():Config.INSTANCE.getConfig().getChunkUnload().getEnable();
+      List<String> complete=Bukkit.getPluginCommand("eclean").tabComplete(sender,"eclean",new String[]{""});
+      boolean isolated=enabled&&!base.hasPermission("eclean.admin")&&complete.contains(feature);
+      for(String other:features)if(!other.equals(feature)&&complete.contains(other))isolated=false;
+      check("permission_"+feature+"_isolated",isolated,complete);
+      Bukkit.getPluginCommand("eclean").execute(sender,"eclean",new String[]{feature,"off"});base.removeAttachment(attachment);
+    }
+    PermissionAttachment admin=base.addAttachment(this,"eclean.admin",true);
+    check("permission_admin_children",features.stream().allMatch(f->base.hasPermission("eclean."+f)),"three inherited children");
+    admin.setPermission("eclean.redstone",false);
+    Bukkit.getPluginCommand("eclean").execute(sender,"eclean",new String[]{"redstone","on"});
+    check("permission_explicit_denial",!Config.INSTANCE.getConfig().getRedstone().getEnable(),"child false overrides admin");
+    base.removeAttachment(admin);config();
+  }
   void redstone(){
     for(World w:Arrays.asList(a,b)){for(int x=3;x<7;x++)w.getBlockAt(x,69,5).setType(Material.STONE);w.getBlockAt(5,70,5).setType(Material.REDSTONE_WIRE);}
     final boolean[] power={false};clock=Bukkit.getScheduler().runTaskTimer(this,()->{power[0]=!power[0];for(World w:Arrays.asList(a,b))w.getBlockAt(4,70,5).setType(power[0]?Material.REDSTONE_BLOCK:Material.AIR);},1,2);
@@ -118,9 +177,16 @@ public class MatrixProbe extends JavaPlugin implements Listener {
     });
   }
   void afterRedstone(){
+    if(testPapi){FeaturePlaceholders.INSTANCE.refresh();check("papi_redstone_counts",Long.parseLong(papi("redstone_events"))>0&&Long.parseLong(papi("redstone_tracked"))>0&&Long.parseLong(papi("redstone_suppressed"))==RedstoneMonitor.INSTANCE.getSuppressedEvents$EClean(),papi("redstone_events")+","+papi("redstone_suppressed"));}
     check("suppress_rising_only",suppressed>0&&falling>0,"suppressed="+suppressed+", falling="+falling);check("redstone_blocks_retained",a.getBlockAt(5,70,5).getType()==Material.REDSTONE_WIRE,"wire");clock.cancel();cmd("eclean redstone off");check("redstone_off_immediate",RedstoneMonitor.INSTANCE.getWindow$EClean()==null,"released");
+    if(testPapi)check("papi_redstone_stop_reset",papi("redstone_running").equals("false")&&papi("redstone_suppressed").equals("0"),papi("redstone_running")+","+papi("redstone_suppressed"));
     red=red("report",false);unload="chunk_unload: {enable: false, period_ticks: 5, idle_ticks: 40, keep_radius: 3, scan_budget: 4096, request_budget: 4, ignored_worlds: [world, world_nether, world_the_end, it_a, it_b]}\n";config();
-    u.loadChunk(28,20);u.getBlockAt(449,70,321).setType(Material.STONE);u.save();u.getBlockAt(449,70,321).setType(Material.DIAMOND_BLOCK);
+    // Newly generated chunks must reach their ticking state before the save test.
+    guardCandidate=true;u.loadChunk(28,20);force(u.getChunkAt(28,20),true);u.getBlockAt(449,70,321).setType(Material.STONE);
+    later(40,this::startUnload);
+  }
+  void startUnload(){
+    u.save();u.getBlockAt(449,70,321).setType(Material.DIAMOND_BLOCK);force(u.getChunkAt(28,20),false);unloaded.remove("it_unload:28:20");
     u.loadChunk(24,20);force(u.getChunkAt(24,20),true);u.loadChunk(20,20);optional(u.getChunkAt(20,20),"addPluginChunkTicket",new Class[]{org.bukkit.plugin.Plugin.class},this);
     cmd("eclean chunkunload on");cmd("eclean chunkunload status");check("chunkunload_on_running",ChunkUnloader.INSTANCE.getPolicy$EClean()!=null,Compatibility.INSTANCE.getChunkProtection());
     later(15,()->check("idle_threshold_wait",ChunkUnloader.INSTANCE.getPolicy$EClean().getAttempted()==0,"no early request"));later(60,()->awaitUnload(60));
@@ -132,6 +198,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
     later(20,()->awaitUnload(elapsed+20));
   }
   void afterUnload(){
+    if(testPapi){FeaturePlaceholders.INSTANCE.refresh();check("papi_unload_counters",Long.parseLong(papi("chunkunload_accepted"))==ChunkUnloader.INSTANCE.getPolicy$EClean().getAccepted()&&Long.parseLong(papi("chunkunload_scanned"))>0,papi("chunkunload_accepted")+","+papi("chunkunload_scanned"));cmd("papi reload");check("papi_survives_reload",papi("chunkunload_running").equals("true"),"PAPI reload");}
     cmd("eclean unloadstats");long accepted=ChunkUnloader.INSTANCE.getPolicy$EClean().getAccepted();check("unload_request_accepted",accepted>0,accepted);
     boolean gone=unloaded.contains("it_unload:28:20")&&!u.isChunkLoaded(28,20);check("candidate_actually_unloaded",gone,"event plus isChunkLoaded=false");
     if(Compatibility.INSTANCE.getSupportsForceLoadedChunks())check("force_loaded_protected",u.isChunkLoaded(24,20)&&Compatibility.INSTANCE.isForceLoaded(u.getChunkAt(24,20)),"force flag");
@@ -143,6 +210,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   void restart(){
     // Resolve both classes before disabling their providing plugin/classloader.
     Object monitor=RedstoneMonitor.INSTANCE,unloader=ChunkUnloader.INSTANCE;
+    if(testPapi)check("papi_restart_state",papi("worldrules_enabled").equals("false")&&papi("redstone_running").equals("true")&&papi("chunkunload_running").equals("true"),"persisted switches");
     check("restart_toggle_persistence",!Config.INSTANCE.getConfig().getWorldRules()&&RedstoneMonitor.INSTANCE.getWindow$EClean()!=null&&ChunkUnloader.INSTANCE.getPolicy$EClean()!=null,"world off; both services on");
     u=world("it_unload");u.loadChunk(28,20);force(u.getChunkAt(28,20),true);
     later(40,()->{
@@ -154,4 +222,7 @@ public class MatrixProbe extends JavaPlugin implements Listener {
   @EventHandler(priority=EventPriority.LOWEST) public void raw(BlockRedstoneEvent e){String n=e.getBlock().getWorld().getName();if(n.equals("it_a")||n.equals("it_b")){before.put(e,e.getNewCurrent());if(n.equals("it_a"))eventsA++;else eventsB++;}}
   @EventHandler(priority=EventPriority.MONITOR) public void end(BlockRedstoneEvent e){Integer raw=before.remove(e);if(raw==null||!e.getBlock().getWorld().getName().equals("it_a"))return;if(raw>e.getOldCurrent()&&e.getNewCurrent()==e.getOldCurrent())suppressed++;if(raw<e.getOldCurrent()&&e.getNewCurrent()==raw&&Config.INSTANCE.getConfig().getRedstone().getMode().equals("suppress"))falling++;}
   @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true) public void unloaded(ChunkUnloadEvent e){unloaded.add(e.getWorld().getName()+":"+e.getChunk().getX()+":"+e.getChunk().getZ());}
+  @EventHandler(priority=EventPriority.HIGHEST) public void guardNaturalUnload(ChunkUnloadEvent e){
+    if(e instanceof Cancellable&&guardCandidate&&e.getWorld().getName().equals("it_unload")&&e.getChunk().getX()==28&&e.getChunk().getZ()==20&&(ChunkUnloader.INSTANCE.getPolicy$EClean()==null||ChunkUnloader.INSTANCE.getPolicy$EClean().getAttempted()==0))((Cancellable)e).setCancelled(true);
+  }
 }

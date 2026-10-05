@@ -1,11 +1,12 @@
-import concurrent.futures,datetime,hashlib,importlib.util,json,pathlib,shutil,subprocess,sys,zipfile,zlib
+import concurrent.futures,datetime,hashlib,importlib.util,json,os,pathlib,re,shutil,subprocess,sys,zipfile,zlib
 ROOT=pathlib.Path(__file__).resolve().parent.parent/".integration-work"
 spec=importlib.util.spec_from_file_location('prepare',pathlib.Path(__file__).with_name('prepare-servers.py'));prepare=importlib.util.module_from_spec(spec);spec.loader.exec_module(prepare)
 PROJECT=ROOT.parent
 RUN=ROOT/'runtime-tools/runs'/datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')
+TEST_PAPI=os.environ.get('ECLEAN_TEST_PAPI','0')=='1'
 def compile_probe():
  out=ROOT/'runtime-tools/probe-classes';out.mkdir(exist_ok=True)
- javac=next((ROOT/'runtime-tools/java17').glob('*/bin/javac'))
+ javac=prepare.java_home(17)/'bin/javac'
  cp=str(ROOT/'runtime-tools/servers/1.8.8/cache/patched_1.8.8.jar')+':'+str(PROJECT/'build/libs/EClean-1.21.0.jar')
  subprocess.run([str(javac),'--release','8','-cp',cp,'-d',str(out),str(PROJECT/'integration/MatrixProbe.java')],check=True)
  with zipfile.ZipFile(ROOT/'runtime-tools/ECleanMatrixProbe.jar','w') as z:
@@ -24,6 +25,13 @@ def run(v):
   if (src/name).exists():(p/name).symlink_to(src/name,target_is_directory=True)
  plugins=p/'plugins';plugins.mkdir();ec=plugins/'EClean';ec.mkdir()
  jar=PROJECT/'build/libs/EClean-1.21.0.jar';shutil.copyfile(jar,plugins/'EClean.jar');shutil.copyfile(ROOT/'runtime-tools/ECleanMatrixProbe.jar',plugins/'ECleanMatrixProbe.jar')
+ if TEST_PAPI:
+  papi_version='2.11.6' if prepare.VERSIONS[v]==8 else '2.12.3'
+  papi=ROOT/f'runtime-tools/papi/PlaceholderAPI-{papi_version}.jar'
+  shutil.copyfile(papi,plugins/papi.name)
+  pd=plugins/'PlaceholderAPI';pd.mkdir()
+  (pd/'config.yml').write_text('check_updates: false\ncloud_enabled: false\ndetect_malicious_expansions: false\n')
+  (p/'papi-version.json').write_text(json.dumps({'version':papi_version,'sha256':hashlib.sha256(papi.read_bytes()).hexdigest()}))
  (p/'eclean-sha256.txt').write_text(hashlib.sha256(jar.read_bytes()).hexdigest())
  (ec/'config.yml').write_text('debug: false\nupdate: false\nduration: 9999999\nmessage: {}\nliving: {enable: false}\ndrop: {enable: false}\nchunk: {enable: false}\ntrashcan: {enable: false}\n')
  for folder,content in [('PluginMetrics','opt-out: true\n'),('bStats','enabled: false\n')]:
@@ -35,7 +43,7 @@ def run(v):
   if phase=='restart' and not (p/'phase1.complete').exists():break
   print('START',v,phase,flush=True)
   with (p/f'{phase}.log').open('w') as log:
-   proc=subprocess.Popen(prepare.java_args(v)+['-jar','paper.jar']+([] if v in ('1.8.8','1.12.2','1.13.2') else ['--nogui']),cwd=p,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT)
+   proc=subprocess.Popen(prepare.java_args(v)+(['-Declean.probe.papi=true'] if TEST_PAPI else [])+['-jar','paper.jar']+([] if v in ('1.8.8','1.12.2','1.13.2') else ['--nogui']),cwd=p,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT)
    try:proc.wait(timeout=280)
    except subprocess.TimeoutExpired:
     print('TIMEOUT',v,phase,flush=True)
@@ -47,6 +55,8 @@ def run(v):
   if (p/name).exists():rows+=(p/name).read_text().splitlines()
  passed=sum(s.startswith('PASS') for s in rows);failed=sum(s.startswith('FAIL') for s in rows)
  print('RESULT',v,'pass',passed,'fail',failed,'restart',(p/'restart-results.tsv').exists(),flush=True)
+ logs='\n'.join(f.read_text(errors='replace') for f in p.glob('*.log'))
+ if re.search(r'Could not pass event .+ to (?:EClean|PlaceholderAPI)|Error occurred while (?:enabling|disabling) (?:EClean|PlaceholderAPI)|NoClassDefFoundError|NoSuchMethodError|UnsupportedClassVersionError',logs):raise RuntimeError('Plugin/probe error in '+str(p))
  if failed or len(rows)<39 or not (p/'restart-results.tsv').exists():raise RuntimeError(str(p))
 if __name__=='__main__':
  compile_probe();print('RUN',RUN,flush=True);failed=[]

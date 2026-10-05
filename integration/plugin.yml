@@ -3,3 +3,4 @@ version: 1.0
 main: MatrixProbe
 api-version: 1.13
 depend: [EClean]
+softdepend: [PlaceholderAPI]

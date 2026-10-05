@@ -44,14 +44,19 @@
 - `/eclean chunkunload <on|off|status>` 闲置区块卸载开关
 - `/eclean unloadstats` 卸载请求统计
 
-三个开关均需 `eclean.admin`，立即生效并保存配置，重启保留。首次保存备份为 `config.yml.before-feature-switch`；保存会移除 YAML 注释。世界规则默认开启，红石和区块卸载默认关闭。见 [兼容说明](docs/compatibility.md) 与 [典型版本测试](docs/compatibility-test-report.md)。
+三个开关分别使用 `eclean.worldrules`、`eclean.redstone`、`eclean.chunkunload`，`eclean.admin` 继承全部三项权限，立即生效并保存配置，重启保留。首次保存备份为 `config.yml.before-feature-switch`；保存会移除 YAML 注释。世界规则默认开启，红石和区块卸载默认关闭。见 [兼容说明](docs/compatibility.md) 与 [典型版本测试](docs/compatibility-test-report.md)。
 
 ## 权限
 
-- `eclean.admin` 使用插件指令
+- `eclean.admin` 使用管理指令，并继承三个功能权限（默认 OP）
+- `eclean.worldrules` 世界规则开关与状态
+- `eclean.redstone` 红石开关、状态与统计
+- `eclean.chunkunload` 区块卸载开关、状态与统计
 - `eclean.trash` 打开垃圾桶
 
 ## PlaceholderAPI
+
+新增 17 个功能占位符，例如 `%eclean_worldrules_enabled%`、`%eclean_redstone_suppressed%`、`%eclean_chunkunload_accepted%`。完整列表、权限继承与计数含义见 [权限与占位符](docs/permissions-placeholders.md)。
 
 - `%eclean_before_next%` - `距离下一次清理的时间, 单位秒`
 - `%eclean_before_next_formatted%` - `距离下一次清理的时间, 格式化的时间`

@@ -1,6 +1,6 @@
 # 闲置区块卸载请求（默认关闭）
 
-使用 `/eclean chunkunload on|off|status` 修改或查询开关，或在 `config.yml` 设置 `chunk_unload.enable: true` 后，用 `/eclean unloadstats` 查看计数，需要 `eclean.admin` 权限。
+使用 `/eclean chunkunload on|off|status` 修改或查询开关，或在 `config.yml` 设置 `chunk_unload.enable: true` 后，用 `/eclean unloadstats` 查看计数，需要 `eclean.chunkunload`（`eclean.admin` 自动继承）权限。
 
 本模块只尝试将已加载且符合条件的区块加入服务器的安全卸载队列。不删除区块文件、不移除实体、不关闭自动保存，不移除其他插件的加载票据，也不取消强制加载。
 
@@ -26,3 +26,5 @@
 现代 Minecraft 已通过加载票据管理区块，普通情况下不需要额外的定时卸载器。本功能无法清除由其他插件合法持有的加载票据，因此不能保证明显释放内存或提升 TPS。默认关闭，只有测试确认有收益再启用。普通 Bukkit/Paper 调度，不支持 Folia。
 
 API 语义参考：[Paper World API](https://jd.papermc.io/paper/26.2/org/bukkit/World.html#unloadChunkRequest(int,int))。
+
+对应占位符及授权说明见 [权限与占位符](permissions-placeholders.md)。

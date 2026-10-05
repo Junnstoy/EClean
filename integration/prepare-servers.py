@@ -2,8 +2,11 @@ import concurrent.futures, os, pathlib, subprocess, urllib.parse
 from importlib.machinery import SourceFileLoader
 ROOT=pathlib.Path(__file__).resolve().parent.parent/".integration-work"
 VERSIONS={'1.8.8':8,'1.12.2':8,'1.13.2':8,'1.16.5':8,'1.17.1':17,'1.18.2':17,'1.20.4':17,'1.20.6':21,'1.21.11':21,'26.3':25}
+def java_home(major):
+ override=os.environ.get(f'ECLEAN_JAVA_{major}_HOME')
+ return pathlib.Path(override) if override else next((ROOT/f'runtime-tools/java{major}').glob('*/bin/java')).parent.parent
 def java_args(v):
- java=next((ROOT/f'runtime-tools/java{VERSIONS[v]}').glob('*/bin/java'))
+ java=java_home(VERSIONS[v])/'bin/java'
  args=[str(java),'-Xms256M','-Xmx1200M','-Djava.awt.headless=true','-Dterminal.jline=false','-Dterminal.ansi=false','-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts','-DIReallyKnowWhatIAmDoingISwear=true']
  proxy=urllib.parse.urlsplit(os.environ.get('HTTPS_PROXY',''))
  if proxy.hostname:args += [f'-Dhttps.proxyHost={proxy.hostname}',f'-Dhttps.proxyPort={proxy.port}',f'-Dhttp.proxyHost={proxy.hostname}',f'-Dhttp.proxyPort={proxy.port}']
